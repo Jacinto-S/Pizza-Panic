@@ -16,9 +16,12 @@ import java.util.Objects;
 import static java.awt.event.KeyEvent.*;
 
 // TODO: Items
-// TODO: High Score
 // TODO: Multiplayer (lokal)
+// TODO: Rest High Score - Einstellung
+// TODO: High Scores für jeden Schwierigkeitsgrad einzeln
+// TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Animationen für die Kunden und das Kotzen
+// TODO: Krasses Erklärungsmenü im Hauptmenü
 
 final class Main implements Game {
     private final ImageObject player;
@@ -118,7 +121,7 @@ final class Main implements Game {
                 new Vertex(800, 10), new Vertex(-1, 0), "wolke.png"));*/
 
         gegner().add(new ImageObject(
-                new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.png"));
+                new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
 
         ziel().add(new ImageObject(
                 new Vertex(this.width() - 134, this.height() / 2D - 236 - 30), new Vertex(0, 0), "restaurant.png"));
