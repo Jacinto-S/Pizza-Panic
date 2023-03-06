@@ -177,7 +177,7 @@ final class Main implements Game {
 
         //Es soll alle x Sekunden ein Gegner generiert werden.
         if (timer % (spawnrate / schwierigkeit) == 0 && timer > 0 && !pause) {
-            gegner().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.png"));
+            gegner().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
             System.out.println("Kunden: " + gegner().size());
         }
 
@@ -299,17 +299,28 @@ final class Main implements Game {
             g.fillRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
             g.setColor(Color.white);
             g.drawString("hard", width / 2 + 376, height / 2 - 113);
+            //Menüoptionen Spielermodus
+            //Singleplayer
+            g.setColor(Color.darkGray);
+            g.fillRoundRect(width / 2 - 300, height / 2 + 25, 200, 60, 50, 50);
+            g.setColor(Color.white);
+            g.drawString("singleplayer", width / 2 - 264, height / 2 + 62);
+            //Multiplayer
+            g.setColor(Color.darkGray);
+            g.fillRoundRect(width / 2 + 100, height / 2 + 25, 200, 60, 50, 50);
+            g.setColor(Color.white);
+            g.drawString("multiplayer", width / 2 + 143, height / 2 + 62);
             //Menüoptionen Erklärungen
             //Steuerung
             g.setColor(Color.darkGray);
-            g.fillRoundRect(width / 2 - 300, height / 2 + 200, 200, 60, 50, 50);
+            g.fillRoundRect(width / 2 - 300 /*-100*/, height / 2 + 200, 200, 60, 50, 50);
             g.setColor(Color.white);
-            g.drawString("controls", width / 2 - 247, height / 2 + 237);
+            g.drawString("controls", width / 2 - 247 /*-100*/, height / 2 + 237);
             //Spielbeschreibung
             g.setColor(Color.darkGray);
-            g.fillRoundRect(width / 2 + 100, height / 2 + 200, 200, 60, 50, 50);
+            g.fillRoundRect(width / 2 + 100 /*+100*/, height / 2 + 200, 200, 60, 50, 50);
             g.setColor(Color.white);
-            g.drawString("about", width / 2 + 167, height / 2 + 237);
+            g.drawString("about", width / 2 + 167 /*+100*/, height / 2 + 237);
             //Auswahl der Stufen
             g.setColor(Color.red);
             //einfach
@@ -487,7 +498,11 @@ final class Main implements Game {
                 if (player().velocity().x > 0 && !pause && !startbildschirm) player().velocity().add(new Vertex(-3, 0));
             }
             case VK_DOWN -> {
-                if (startbildschirm && !menüunten) menüunten = true;
+                if (startbildschirm && !menüunten){
+                    if(menüwahl == 0) menüwahl2 = 0;
+                    else if(menüwahl == 2) menüwahl2 = 1;
+                    menüunten = true;
+                }
                 if (pause && pausenmenü == 0) {
                     pausenmenü = (zwischenspeicher1 == 0 ? 1 : zwischenspeicher1);
                 }
