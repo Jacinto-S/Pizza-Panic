@@ -50,7 +50,8 @@ final class Main implements Game {
     boolean menüunten = false;
     int menüwahl2 = 0;
     boolean erklärung = false;
-    static int highscore = 0;
+    static int highscore = loadHighscore();
+    static int blinken = 0;
 
 
     Main(ImageObject player, List<List<? extends GameObj>> goss
@@ -231,10 +232,13 @@ final class Main implements Game {
             player().velocity().y = 0;
         }
         if (player().pos().x == width - player().width() - ziel().get(0).width()) player().velocity().x = 0;
+
+        if(timer == 0) blinken++;
+        else if(blinken > 0) blinken = 0;
     }
 
-    //TODO: High Score speichern in Dokument
-    public void saveScore(){
+    //High Score speichern in Dokument
+    public void saveScore() {
         try {
             FileWriter writer = new FileWriter("highscore.txt");
             writer.write(Integer.toString(lieferungen[0]));
@@ -246,24 +250,25 @@ final class Main implements Game {
 
     //High Score abrufen
     public static int loadHighscore() {
-        try{
+        try {
             java.io.File file = new java.io.File("highscore.txt");
             java.util.Scanner scanner = new java.util.Scanner(file);
             int highscore = scanner.nextInt();
             scanner.close();
             return highscore;
-        }   catch (FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             return 0;
         }
     }
 
-    //Game Over Screen
+    //Menüs
     @Override
     public void paintTo(Graphics g) {
         Font h1 = g.getFont().deriveFont(48.0f);
         Font groß = g.getFont().deriveFont(24.0f);
         Font mittel = g.getFont().deriveFont(18.0f);
         Font klein = g.getFont().deriveFont(12.0f);
+        //Main Menu
         if (startbildschirm) {
             //Hintergrund
             g.setFont(h1);
@@ -344,9 +349,23 @@ final class Main implements Game {
                 //Game over bei Niederlage
                 if (lose) g.drawString("You lose!", width / 2 - 25, height / 2 + 35);
                 else {
+                    //New Highscore Animation
+                    if (lieferungen[0] > highscore) {
+                        g.setColor(Color.ORANGE);
+                        g.fillRoundRect(width/2 - 300, 200, 600, 100, 50, 50);
+                        g.setColor(Color.RED);
+                        g.setFont(h1);
+                        g.drawString("New Highscore!", width / 2 - 150, 270);
+                        if(blinken % 40 >= 20) {
+                            g.setColor(Color.ORANGE);
+                            g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
+                        }
+                    }
+                    g.setFont(mittel);
+                    g.setColor(Color.white);
                     g.drawString("Score: " + lieferungen[0] + " | Highscore: " + loadHighscore(),
                             //Der String soll so verschoben werden, dass er mittig Zentriert bleibt, wenn der Score steigt.
-                            width / 2 - 80 - (int)(5.5*((String.valueOf(lieferungen[0]).length()-1)+String.valueOf(loadHighscore()).length())),
+                            width / 2 - 80 - (int) (5.5 * ((String.valueOf(lieferungen[0]).length() - 1) + String.valueOf(loadHighscore()).length())),
                             height / 2 + 35);
                 }
                 g.drawString("To restart, press Space.", width / 2 - 89, height / 2 + 70);
@@ -428,13 +447,13 @@ final class Main implements Game {
             g.setFont(mittel);
             g.drawString("Willkommen in der erschreckenden Welt von Que Mara, dem schlechtesten Restaurant der Stadt!", 525, 240);
             g.drawString("Hier werden die Kunden regelmäßig mit furchtbar schlechtem Essen vergiftet. Aber es gibt eine Rettung:", 525, 240 + 25);
-            g.drawString("Die Pizzas des Lieferdienstes! Du bist der Held dieses Spiels und musst die Pizzen durch die Straßen", 525, 240 + 25*2);
-            g.drawString("an den Kunden vorbei navigieren, die das Restaurant verlassen.", 525, 240 + 25*3);
-            g.drawString("Aber Vorsicht! Alle Kunden haben eine Lebensmittelvergiftung. Wenn dich einer von ihnen ankotzt,", 525, 240 + 25*4);
-            g.drawString("ist das Spiel vorbei. Dein Ziel ist es, möglichst viele Pizzen zu liefern, bevor die Zeit abläuft.", 525, 240 + 25*5);
-            g.drawString("Bist du bereit für diese spannende Herausforderung? Starte das Spiel, um es herauszufinden!", 525, 240 + 25*6);
-            g.drawString("Disclaimer: Die Handlung und alle handelnden Personen und Organisationen sind frei erfunden.", 525, 240 + 25*8);
-            g.drawString("Jegliche Ähnlichkeit mit realen Personen/Organisationen sind rein zufällig und nicht beabsichtigt.", 525, 240 + 25*9);
+            g.drawString("Die Pizzas des Lieferdienstes! Du bist der Held dieses Spiels und musst die Pizzen durch die Straßen", 525, 240 + 25 * 2);
+            g.drawString("an den Kunden vorbei navigieren, die das Restaurant verlassen.", 525, 240 + 25 * 3);
+            g.drawString("Aber Vorsicht! Alle Kunden haben eine Lebensmittelvergiftung. Wenn dich einer von ihnen ankotzt,", 525, 240 + 25 * 4);
+            g.drawString("ist das Spiel vorbei. Dein Ziel ist es, möglichst viele Pizzen zu liefern, bevor die Zeit abläuft.", 525, 240 + 25 * 5);
+            g.drawString("Bist du bereit für diese spannende Herausforderung? Starte das Spiel, um es herauszufinden!", 525, 240 + 25 * 6);
+            g.drawString("Disclaimer: Die Handlung und alle handelnden Personen und Organisationen sind frei erfunden.", 525, 240 + 25 * 8);
+            g.drawString("Jegliche Ähnlichkeit mit realen Personen/Organisationen sind rein zufällig und nicht beabsichtigt.", 525, 240 + 25 * 9);
         }
     }
 
@@ -449,6 +468,7 @@ final class Main implements Game {
     public void keyPressedReaction(KeyEvent keyEvent) {
         switch (keyEvent.getKeyCode()) {
             case VK_O -> timer = 1;
+            case VK_P -> saveScore();
             case VK_RIGHT -> {
                 if (startbildschirm && menüunten && menüwahl2 == 0) menüwahl2 = 1;
                 if (pause && pausenmenü != 0 && pausenmenü < 3) pausenmenü++;
@@ -490,7 +510,7 @@ final class Main implements Game {
             }*/
             case VK_SPACE -> {
                 if (timer == 0) {
-                    if (loadHighscore()<lieferungen[0]) saveScore();
+                    if (loadHighscore() < lieferungen[0]) saveScore();
                     init();
                 }
                 lose = false;
