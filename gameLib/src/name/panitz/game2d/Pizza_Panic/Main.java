@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.List;
 
 import name.panitz.game2d.*;
-import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
 import java.awt.event.*;
@@ -49,8 +48,10 @@ final class Main implements Game {
     double schwierigkeit = 0;
     int pausenmenü = 0;
     boolean steuerung;
+    boolean singleplayer = true;
     int zwischenspeicher1 = 0;
-    boolean menüunten = false;
+    int menüstufen = 0;
+    int menüwahl1 = 0;
     int menüwahl2 = 0;
     boolean erklärung = false;
     static int highscore = loadHighscore();
@@ -236,8 +237,8 @@ final class Main implements Game {
         }
         if (player().pos().x == width - player().width() - ziel().get(0).width()) player().velocity().x = 0;
 
-        if(timer == 0) blinken++;
-        else if(blinken > 0) blinken = 0;
+        if (timer == 0) blinken++;
+        else if (blinken > 0) blinken = 0;
     }
 
     //High Score speichern in Dokument
@@ -313,7 +314,7 @@ final class Main implements Game {
             //Menüoptionen Erklärungen
             //Steuerung
             g.setColor(Color.darkGray);
-            g.fillRoundRect(width / 2 - 300 /*-100*/, height / 2 + 200, 200, 60, 50, 50);
+            g.fillRoundRect(width / 2 - 300, height / 2 + 200, 200, 60, 50, 50);
             g.setColor(Color.white);
             g.drawString("controls", width / 2 - 247 /*-100*/, height / 2 + 237);
             //Spielbeschreibung
@@ -324,28 +325,31 @@ final class Main implements Game {
             //Auswahl der Stufen
             g.setColor(Color.red);
             //einfach
-            if (!menüunten) {
-                if (menüwahl == 0) {
-                    g.drawRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
-                }
-                //medium
-                if (menüwahl == 1) {
-                    g.drawRoundRect(width / 2 - 100, height / 2 - 150, 200, 60, 50, 50);
-                }
-                //schwer
-                if (menüwahl == 2) {
-                    g.drawRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
+                switch (menüwahl) {
+                    //einfach
+                    case 0 -> g.drawRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
+                    //medium
+                    case 1 -> g.drawRoundRect(width / 2 - 100, height / 2 - 150, 200, 60, 50, 50);
+                    //schwer
+                    case 2 -> g.drawRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
+            }
+            //Spielermodus
+            if (menüstufen != 0) {
+                switch (menüwahl1) {
+                    //singleplayer
+                    case 0 -> g.drawRoundRect(width / 2 - 300, height / 2 + 25, 200, 60, 50, 50);
+                    //multiplayer
+                    case 1 -> g.drawRoundRect(width / 2 + 100, height / 2 + 25, 200, 60, 50, 50);
                 }
             }
             //Erklärungen
-            if (menüunten) {
-                if (menüwahl2 == 0) {
-                    g.setColor(Color.red);
-                    g.drawRoundRect(width / 2 - 300, height / 2 + 200, 200, 60, 50, 50);
-                }
-                if (menüwahl2 == 1) {
-                    g.setColor(Color.red);
-                    g.drawRoundRect(width / 2 + 100, height / 2 + 200, 200, 60, 50, 50);
+            if (menüstufen == 2) {
+                g.setColor(Color.ORANGE);
+                switch (menüwahl2) {
+                    //Steuerung
+                    case 0 -> g.drawRoundRect(width / 2 - 300, height / 2 + 200, 200, 60, 50, 50);
+                    //Erkärung
+                    case 1 -> g.drawRoundRect(width / 2 + 100, height / 2 + 200, 200, 60, 50, 50);
                 }
             }
             //Schriftgröße zurücksetzen
@@ -366,11 +370,11 @@ final class Main implements Game {
                     //New Highscore Animation
                     if (lieferungen[0] > highscore) {
                         g.setColor(Color.ORANGE);
-                        g.fillRoundRect(width/2 - 300, 200, 600, 100, 50, 50);
+                        g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
                         g.setColor(Color.RED);
                         g.setFont(h1);
                         g.drawString("New Highscore!", width / 2 - 150, 270);
-                        if(blinken % 40 >= 20) {
+                        if (blinken % 40 >= 20) {
                             g.setColor(Color.ORANGE);
                             g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
                         }
@@ -484,24 +488,41 @@ final class Main implements Game {
             case VK_O -> timer = 1;
             case VK_P -> saveScore();
             case VK_RIGHT -> {
-                if (startbildschirm && menüunten && menüwahl2 == 0) menüwahl2 = 1;
-                if (pause && pausenmenü != 0 && pausenmenü < 3) pausenmenü++;
-                if (startbildschirm && menüwahl < 2 && !menüunten) menüwahl++;
                 if (player().velocity().x < 4 && !pause && !startbildschirm) player().velocity().add(new Vertex(3, 0));
+                else if (startbildschirm) {
+                    switch (menüstufen) {
+                        case 0 -> {
+                            if (menüwahl < 2) menüwahl++;
+                        }
+                        case 1 -> {
+                            if (menüwahl1 == 0) menüwahl1++;
+                        }
+                        case 2 -> {
+                            if (menüwahl2 == 0) menüwahl2++;
+                        }
+                    }
+                } else if (pause && pausenmenü != 0 && pausenmenü < 3) pausenmenü++;
             }
             case VK_LEFT -> {
-                if (pause && pausenmenü > 0) {
-                    pausenmenü--;
-                }
-                if (startbildschirm && menüunten && menüwahl2 != 0) menüwahl2--;
-                if (startbildschirm && menüwahl > 0 && !menüunten) menüwahl--;
                 if (player().velocity().x > 0 && !pause && !startbildschirm) player().velocity().add(new Vertex(-3, 0));
+                else if (startbildschirm){
+                    switch(menüstufen) {
+                        case 0 -> {if (menüwahl != 0) menüwahl--;}
+                        case 1 -> {if (menüwahl1 != 0) menüwahl1--;}
+                        case 2 -> {if (menüwahl2 != 0) menüwahl2--;}
+                    }
+                } else if (pause && pausenmenü > 0) pausenmenü--;
             }
             case VK_DOWN -> {
-                if (startbildschirm && !menüunten){
-                    if(menüwahl == 0) menüwahl2 = 0;
-                    else if(menüwahl == 2) menüwahl2 = 1;
-                    menüunten = true;
+                if (startbildschirm) {
+                    if (menüstufen == 0) {
+                        if (menüwahl == 0) menüwahl1 = 0;
+                        else if (menüwahl == 2) menüwahl1 = 1;
+                        menüstufen = 1;
+                    } else if (menüstufen == 1) {
+                        menüstufen = 2;
+                        menüwahl2 = menüwahl1;
+                    }
                 }
                 if (pause && pausenmenü == 0) {
                     pausenmenü = (zwischenspeicher1 == 0 ? 1 : zwischenspeicher1);
@@ -512,7 +533,7 @@ final class Main implements Game {
                 }
             }
             case VK_UP -> {
-                if (startbildschirm && menüunten) menüunten = false;
+                if (startbildschirm && menüstufen > 0) menüstufen--;
                 if (pause && pausenmenü != 0) {
                     zwischenspeicher1 = pausenmenü;
                     pausenmenü = 0;
@@ -535,7 +556,10 @@ final class Main implements Game {
             }
             case VK_ENTER -> {
                 if (startbildschirm && !steuerung) {
-                    if (!menüunten) {
+                    if (menüstufen == 0) {
+                        menüstufen ++;
+                    }
+                    else if (menüstufen == 1) {
                         switch (menüwahl) {
                             case 0 -> {
                                 schwierigkeit = 0.5;
@@ -550,8 +574,12 @@ final class Main implements Game {
                                 startbildschirm = false;
                             }
                         }
+                        switch (menüwahl1) {
+                            case 0 -> singleplayer = true;
+                            case 1 -> singleplayer = false;
+                        }
                         init();
-                    } else {
+                    } else if (menüstufen == 2) {
                         switch (menüwahl2) {
                             case 0 -> steuerung = true;
                             case 1 -> erklärung = true;
