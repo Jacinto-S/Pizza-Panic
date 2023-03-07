@@ -138,14 +138,14 @@ final class Main implements Game {
             player().add(new ImageObject(
                     new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "fahrradkurier.png"));
             eingang().add(new ImageObject(
-                    new Vertex(0, this.height() / 2D - 30), new Vertex(0, 0), "startbereich.png"));
+                    new Vertex(0, this.height() / 2D - 60), new Vertex(0, 0), "startbereich-groß.png"));
         }
+
         ziel().add(new ImageObject(
                 new Vertex(this.width() - 134, this.height() / 2D - 236 - 30), new Vertex(0, 0), "restaurant.png"));
 
         gegner().add(new ImageObject(
                 new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
-
 
         ((TextObject) texte().get(0)).text = "Lieferungen: 0";
     }
