@@ -23,20 +23,20 @@ import static java.awt.event.KeyEvent.*;
 // TODO: Krasses Erklärungsmenü im Hauptmenü
 
 final class Main implements Game {
-    private final ImageObject player;
-    private final List<List<? extends GameObj>> goss;
-    private final int width;
-    private final int height;
-    public final int[] lieferungen;
-    private final List<GameObj> hintergrund;
-    private final List<GameObj> gegner;
-    private final List<GameObj> wolken;
-    private final List<GameObj> texte;
-    private final List<GameObj> ziel;
+    List<ImageObject> player;
+    List<List<? extends GameObj>> goss;
+    int width;
+    int height;
+    int[] lieferungen;
+    List<GameObj> hintergrund;
+    List<GameObj> gegner;
+    List<GameObj> wolken;
+    List<GameObj> texte;
+    List<GameObj> ziel;
 
-    private final List<GameObj> ende;
+    List<GameObj> ende;
     private int timer;
-    private final List<GameObj> eingang;
+    List<GameObj> eingang;
     int spawnrate = 2400;
     boolean lose = false;
     public boolean pause = false;
@@ -56,9 +56,11 @@ final class Main implements Game {
     boolean erklärung = false;
     static int highscore = loadHighscore();
     static int blinken = 0;
+    int score1;
+    int score2;
 
 
-    Main(ImageObject player, List<List<? extends GameObj>> goss
+    Main(List<ImageObject> player, List<List<? extends GameObj>> goss
             , int width, int height, int[] lieferungen
             , List<GameObj> hintergrund, List<GameObj> gegner
             , List<GameObj> wolken, List<GameObj> texte
@@ -81,7 +83,7 @@ final class Main implements Game {
 
 
     Main() {
-        this(new ImageObject(new Vertex(200, 200), new Vertex(1, 1), "fahrradkurier-schnell.gif")
+        this(new ArrayList<>()
                 , new ArrayList<>(), 1920, 768, new int[]{0}
                 , new ArrayList<>(), new ArrayList<>()
                 , new ArrayList<>(), new ArrayList<>()
@@ -93,6 +95,7 @@ final class Main implements Game {
     public void init() {
         goss().clear();
         goss().add(hintergrund());
+        goss().add(player());
         goss().add(gegner());
         goss().add(wolken());
         goss().add(texte());
@@ -103,15 +106,18 @@ final class Main implements Game {
         gegner().clear();
         wolken().clear();
         texte().clear();
+        player().clear();
         texte().add(new TextObject(new Vertex(10, 30), "Lieferungen: " + 0));
         texte().add(new TextObject(new Vertex(10, 60), "Timer: " + 0));
         ziel().clear();
         this.timer = (int) (121 * SwingScreen.umwandlung);
         this.lieferungen[0] = 0;
-        player().velocity().x = 0;
-        player().velocity().y = 0;
-        player().pos().x = 0;
-        player().pos().y = this.height() / 2D - player().height() / 2D;
+        for (var p : player()) {
+            p.velocity().x = 0;
+            p.velocity().y = 0;
+            p.pos().x = 0;
+            p.pos().y = this.height() / 2D - p.height() / 2D;
+        }
 
 
         hintergrund().add(new ImageObject("straße.png"));
@@ -121,14 +127,25 @@ final class Main implements Game {
         /*wolken().add(new ImageObject(
                 new Vertex(800, 10), new Vertex(-1, 0), "wolke.png"));*/
 
-        gegner().add(new ImageObject(
-                new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
-
+        if (singleplayer) {
+            player().add(new ImageObject(
+                    new Vertex(0, height() / 2D - 21), new Vertex(0, 0), "fahrradkurier.png"));
+            eingang().add(new ImageObject(
+                    new Vertex(0, this.height() / 2D - 30), new Vertex(0, 0), "startbereich.png"));
+        } else {
+            player().add(new ImageObject(
+                    new Vertex(0, height() / 2D + 10), new Vertex(0, 0), "fahrradkurier.png"));
+            player().add(new ImageObject(
+                    new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "fahrradkurier.png"));
+            eingang().add(new ImageObject(
+                    new Vertex(0, this.height() / 2D - 30), new Vertex(0, 0), "startbereich.png"));
+        }
         ziel().add(new ImageObject(
                 new Vertex(this.width() - 134, this.height() / 2D - 236 - 30), new Vertex(0, 0), "restaurant.png"));
 
-        eingang().add(new ImageObject(
-                new Vertex(0, this.height() / 2D - 30), new Vertex(0, 0), "startbereich.png"));
+        gegner().add(new ImageObject(
+                new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
+
 
         ((TextObject) texte().get(0)).text = "Lieferungen: 0";
     }
@@ -155,10 +172,12 @@ final class Main implements Game {
 
 
             //Der Spieler soll verlieren, falls er einen Kunden berührt
-            if (player.touches(z)) {
-                z.pos().moveTo(new Vertex(width() + 10, z.pos().y));
-                lose = true;
-                timer = 0;
+            for (var p : player) {
+                if (p.touches(z)) {
+                    z.pos().moveTo(new Vertex(width() + 10, z.pos().y));
+                    lose = true;
+                    timer = 0;
+                }
             }
 
 
@@ -179,7 +198,6 @@ final class Main implements Game {
         //Es soll alle x Sekunden ein Gegner generiert werden.
         if (timer % (spawnrate / schwierigkeit) == 0 && timer > 0 && !pause) {
             gegner().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
-            System.out.println("Kunden: " + gegner().size());
         }
 
         //Die Kunden haben eine Lebensmittelvergiftung und sollen durch die Gegend taumeln.
@@ -189,56 +207,69 @@ final class Main implements Game {
             }
         }
 
-        //Der Spieler soll daran gehindert werden, das Spielfeld zu verlassen.
-        //1. Test: Wenn er am Rand angekommen ist, wird seine Geschwindigkeit in die Richtung 0 gesetzt, damit er da nicht mehr hin kann
-        //2. Test: Falls er versucht, weiter nach oben zu drücken, wird seine Position zurückgesetzt
-        if (player().isAbove(42) && player().velocity().y <= -1) player().velocity().y = 0;
-        if (player().isAbove(42)) player().pos().y = 0;
-
-        if (player().isUnderneath(this.height - player().height()) && player().velocity().y >= 1)
-            player().velocity().y = 0;
-        if (player().isUnderneath(this.height - player().height()))
-            player().pos().y = this.height - player.height();
-
-        if (player().isLeftOf(90) && player().velocity().x <= -1) player().velocity().x = 0;
-        if (player().isLeftOf(90)) player().pos().x = 0;
-
-        if (player().isRightOf(this.width - player().width()) && player().velocity().x >= 1)
-            player().velocity().x = 0;
-        if (player().isRightOf(this.width - player().width())) player().pos().x = this.width - player.width();
-
         // Timer
         ((TextObject) texte().get(1)).text = "Zeit: " + (int) (timer / SwingScreen.umwandlung);
         if (timer > 0 && !pause) {
             timer--;
         }
 
+        for (var p : player) {
+            //Der Spieler soll daran gehindert werden, das Spielfeld zu verlassen.
+            //1. Test: Wenn er am Rand angekommen ist, wird seine Geschwindigkeit in die Richtung 0 gesetzt, damit er da nicht mehr hin kann
+            //2. Test: Falls er versucht, weiter nach oben zu drücken, wird seine Position zurückgesetzt
+            if (p.isAbove(42) && p.velocity().y <= -1) p.velocity().y = 0;
+            if (p.isAbove(42)) p.pos().y = 0;
+
+            if (p.isUnderneath(this.height - p.height()) && p.velocity().y >= 1)
+                p.velocity().y = 0;
+            if (p.isUnderneath(this.height - p.height()))
+                p.pos().y = this.height - p.height();
+
+            if (p.isLeftOf(90) && p.velocity().x <= -1) p.velocity().x = 0;
+            if (p.isLeftOf(90)) p.pos().x = 0;
+
+            if (p.isRightOf(this.width - p.width()) && p.velocity().x >= 1)
+                p.velocity().x = 0;
+            if (p.isRightOf(this.width - p.width())) p.pos().x = this.width - p.width();
+
+            //Je nach Gang soll das Bild bzw. die Animation des Spielers anders aussehen:
+            if (p.velocity().x == 0) p.setImage("fahrradkurier.png");
+            if (p.velocity().x == 3) p.setImage("fahrradkurier.gif");
+            if (p.velocity().x == 6) p.setImage("fahrradkurier-schnell.gif");
+
+            //Wenn man steht, sollte man nicht weiter nach oben oder unten fahren. Daher muss man dann angehalten werden.
+            if (p.velocity().x == 0 && p.velocity().y != 0) p.velocity().y = 0;
+            //Außerdem soll man zurückgefahren werden, wenn man an der Que Mara vorbei fährt.
+            if (p.pos().x == width - p.width() && p.pos().x != width - p.width() - ziel().get(0).width()) {
+                p.velocity().x = -1;
+                p.velocity().y = 0;
+            }
+            if (p.pos().x == width - p.width() - ziel().get(0).width()) p.velocity().x = 0;
+
+            if (timer == 0) blinken++;
+            else if (blinken > 0) blinken = 0;
+        }
+
         //Aktionen beim Berühren vom Ziel: Zurückgesetzt werden
-        if (player().touches(ziel().get(0))) {
-            player().pos().x = 0;
-            player().pos().y = this.height() / 2D - player().height() / 2D;
-            player().velocity().x = 0;
-            player().velocity().y = 0;
+        if (player().get(0).touches(ziel().get(0))) {
+            player().get(0).pos().x = 0;
+            player().get(0).pos().y = this.height() / 2D +10 -51 - player().get(0).height() / 2D;
+            player().get(0).pos().y = this.height() / 2D +10 - player().get(0).height() / 2D;
+            player().get(0).velocity().x = 0;
+            player().get(0).velocity().y = 0;
             lieferungen[0]++;
             ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
         }
 
-        //Je nach Gang soll das Bild bzw. die Animation des Spielers anders aussehen:
-        if (player().velocity().x == 0) player().setImage("fahrradkurier.png");
-        if (player().velocity().x == 3) player().setImage("fahrradkurier.gif");
-        if (player().velocity().x == 6) player().setImage("fahrradkurier-schnell.gif");
-
-        //Wenn man steht, sollte man nicht weiter nach oben oder unten fahren. Daher muss man dann angehalten werden.
-        if (player().velocity().x == 0 && player().velocity().y != 0) player().velocity().y = 0;
-        //Außerdem soll man zurückgefahren werden, wenn man an der Que Mara vorbei fährt.
-        if (player().pos().x == width - player().width() && player().pos().x != width - player().width() - ziel().get(0).width()) {
-            player().velocity().x = -1;
-            player().velocity().y = 0;
+        if (!singleplayer && player().get(1).touches(ziel().get(0))) {
+            player().get(1).pos().x = 0;
+            player().get(1).pos().y = this.height() / 2D +10 -51 - player().get(1).height() / 2D;
+            player().get(1).pos().y = this.height() / 2D -51 - player().get(1).height() / 2D;
+            player().get(1).velocity().x = 0;
+            player().get(1).velocity().y = 0;
+            lieferungen[0]++;
+            ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
         }
-        if (player().pos().x == width - player().width() - ziel().get(0).width()) player().velocity().x = 0;
-
-        if (timer == 0) blinken++;
-        else if (blinken > 0) blinken = 0;
     }
 
     //High Score speichern in Dokument
@@ -325,13 +356,13 @@ final class Main implements Game {
             //Auswahl der Stufen
             g.setColor(Color.red);
             //einfach
-                switch (menüwahl) {
-                    //einfach
-                    case 0 -> g.drawRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
-                    //medium
-                    case 1 -> g.drawRoundRect(width / 2 - 100, height / 2 - 150, 200, 60, 50, 50);
-                    //schwer
-                    case 2 -> g.drawRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
+            switch (menüwahl) {
+                //einfach
+                case 0 -> g.drawRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
+                //medium
+                case 1 -> g.drawRoundRect(width / 2 - 100, height / 2 - 150, 200, 60, 50, 50);
+                //schwer
+                case 2 -> g.drawRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
             }
             //Spielermodus
             if (menüstufen != 0) {
@@ -357,7 +388,7 @@ final class Main implements Game {
         }
         if (!startbildschirm) {
             for (var gos : goss()) gos.forEach(go -> go.paintTo(g));
-            player().paintTo(g);
+            for (var p : player) p.paintTo(g);
             //Game Over Bildschirm
             if (timer == 0) {
                 g.setColor(Color.black);
@@ -480,15 +511,31 @@ final class Main implements Game {
     public void move() {
         if (timer == 0) return;
         for (var gos : goss()) gos.forEach(go -> go.move());
-        player().move();
     }
 
     public void keyPressedReaction(KeyEvent keyEvent) {
         switch (keyEvent.getKeyCode()) {
             case VK_O -> timer = 1;
             case VK_P -> saveScore();
+            case VK_D -> {
+                if (!singleplayer && !lose && !pause && player().get(1).velocity().x < 4)
+                    player().get(1).velocity().add(new Vertex(3, 0));
+            }
+            case VK_A -> {
+                if (!singleplayer && !lose && !pause && player().get(1).velocity().x > 0)
+                    player().get(1).velocity().add(new Vertex(-3, 0));
+            }
+            case VK_S -> {
+                if (!singleplayer && !lose && !pause && player().get(1).velocity().y < 4 && player().get(1).velocity().x != 0 && (!(player().get(1).velocity().x == -1)))
+                    player().get(1).velocity().add(new Vertex(0, 1));
+            }
+            case VK_W -> {
+                if (!singleplayer && !lose && !pause && player().get(1).velocity().y > -4 && player().get(1).velocity().x != 0 && (!(player().get(1).velocity().x == -1)))
+                    player().get(1).velocity().add(new Vertex(0, -1));
+            }
             case VK_RIGHT -> {
-                if (player().velocity().x < 4 && !pause && !startbildschirm) player().velocity().add(new Vertex(3, 0));
+                if (player().get(0).velocity().x < 4 && !pause && !startbildschirm)
+                    player().get(0).velocity().add(new Vertex(3, 0));
                 else if (startbildschirm) {
                     switch (menüstufen) {
                         case 0 -> {
@@ -504,12 +551,19 @@ final class Main implements Game {
                 } else if (pause && pausenmenü != 0 && pausenmenü < 3) pausenmenü++;
             }
             case VK_LEFT -> {
-                if (player().velocity().x > 0 && !pause && !startbildschirm) player().velocity().add(new Vertex(-3, 0));
-                else if (startbildschirm){
-                    switch(menüstufen) {
-                        case 0 -> {if (menüwahl != 0) menüwahl--;}
-                        case 1 -> {if (menüwahl1 != 0) menüwahl1--;}
-                        case 2 -> {if (menüwahl2 != 0) menüwahl2--;}
+                if (player().get(0).velocity().x > 0 && !pause && !startbildschirm)
+                    player().get(0).velocity().add(new Vertex(-3, 0));
+                else if (startbildschirm) {
+                    switch (menüstufen) {
+                        case 0 -> {
+                            if (menüwahl != 0) menüwahl--;
+                        }
+                        case 1 -> {
+                            if (menüwahl1 != 0) menüwahl1--;
+                        }
+                        case 2 -> {
+                            if (menüwahl2 != 0) menüwahl2--;
+                        }
                     }
                 } else if (pause && pausenmenü > 0) pausenmenü--;
             }
@@ -527,9 +581,9 @@ final class Main implements Game {
                 if (pause && pausenmenü == 0) {
                     pausenmenü = (zwischenspeicher1 == 0 ? 1 : zwischenspeicher1);
                 }
-                if (player().velocity().y < 4 && player().velocity().x != 0
-                        && (!(player.velocity().x == -1)) && !pause) {
-                    player().velocity().add(new Vertex(0, 1));
+                if (player().get(0).velocity().y < 4 && player().get(0).velocity().x != 0
+                        && (!(player().get(0).velocity().x == -1)) && !pause) {
+                    player().get(0).velocity().add(new Vertex(0, 1));
                 }
             }
             case VK_UP -> {
@@ -538,9 +592,9 @@ final class Main implements Game {
                     zwischenspeicher1 = pausenmenü;
                     pausenmenü = 0;
                 }
-                if (player().velocity().y > -4 && player().velocity().x != 0
-                        && (!(player.velocity().x == -1)) && !pause) {
-                    player().velocity().add(new Vertex(0, -1));
+                if (player().get(0).velocity().y > -4 && player().get(0).velocity().x != 0
+                        && (!(player().get(0).velocity().x == -1)) && !pause) {
+                    player().get(0).velocity().add(new Vertex(0, -1));
                 }
             }
             /*case VK_Q -> {
@@ -557,9 +611,8 @@ final class Main implements Game {
             case VK_ENTER -> {
                 if (startbildschirm && !steuerung) {
                     if (menüstufen == 0) {
-                        menüstufen ++;
-                    }
-                    else if (menüstufen == 1) {
+                        menüstufen++;
+                    } else if (menüstufen == 1) {
                         switch (menüwahl) {
                             case 0 -> {
                                 schwierigkeit = 0.5;
@@ -592,8 +645,10 @@ final class Main implements Game {
                             for (var z : gegner()) {
                                 z.velocity().x = -1.5;
                             }
-                            player().velocity().x = gang;
-                            player().velocity().y = schwenkung;
+                            for (var p : player) {
+                                p.velocity().x = gang;
+                                p.velocity().y = schwenkung;
+                            }
                             timer = zeitspeicher;
                             pause = false;
                         }
@@ -615,10 +670,12 @@ final class Main implements Game {
             case VK_ESCAPE -> {
                 if (!pause && !lose && !startbildschirm) {
                     pausenmenü = 0;
-                    gang = player().velocity().x;
-                    schwenkung = player().velocity().y;
-                    player().velocity().x = 0;
-                    player().velocity().y = 0;
+                    for (var p : player) {
+                        gang = p.velocity().x;
+                        schwenkung = p.velocity().y;
+                        p.velocity().x = 0;
+                        p.velocity().y = 0;
+                    }
                     for (var z : gegner()) {
                         z.velocity().x = 0;
                         z.velocity().y = 0;
@@ -629,8 +686,10 @@ final class Main implements Game {
                     for (var z : gegner()) {
                         z.velocity().x = -1.5;
                     }
-                    player().velocity().x = gang;
-                    player().velocity().y = schwenkung;
+                    for (var p : player) {
+                        p.velocity().x = gang;
+                        p.velocity().y = schwenkung;
+                    }
                     timer = zeitspeicher;
                     zwischenspeicher1 = 0;
                     pause = false;
@@ -663,7 +722,7 @@ final class Main implements Game {
     }
 
     @Override
-    public ImageObject player() {
+    public List<ImageObject> player() {
         return player;
     }
 

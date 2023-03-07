@@ -9,7 +9,7 @@ public interface Game{
   int width();
   int height();
 
-  GameObj player();
+  List<ImageObject> player();
 
   List<List<? extends GameObj>> goss();
 
@@ -25,8 +25,8 @@ public interface Game{
   default void move(){
   	if (ended()) return;
     for (var gos:goss()) gos.forEach(go -> go.move());
-    player().move();
-  }    
+    for (var p:player()) p.move();
+  }
 
   boolean won();
   boolean lost();
@@ -38,7 +38,7 @@ public interface Game{
 
   default void paintTo(Graphics g){
     for (var gos:goss()) gos.forEach( go -> go.paintTo(g));
-    player().paintTo(g);
+    for (var p:player()) p.paintTo(g);
   }
 
 
