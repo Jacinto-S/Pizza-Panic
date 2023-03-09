@@ -16,16 +16,14 @@ import static java.awt.event.KeyEvent.*;
 
 //Grundlegendes
 // TODO: Multiplayer (lokal)
-        // -> TODO: Verschiedenfarbige Spieler
-        // -> TODO: Verschiedenfarbige Spieler
-        // -> TODO: Zwei Lieferungen Zähler
-        // -> TODO: Sieg für Spieler mit mehr Punkten
-        // -> TODO: Wenn einer stirbt, Sieg für den anderen Spieler
-        // -> TODO: New Highscore aus für Mutliplayer
+//      -> TODO: New Highscore aus für Mutliplayer
+//      -> TODO: Zwei Lieferungen Zähler
+//      -> TODO: Sieg für Spieler mit mehr Punkten
+//      -> TODO: Wenn einer stirbt, Sieg für den anderen Spieler
 // TODO: Items
-        // -> TODO: Kunden mit Items spawnen
-        // -> TODO: Mountain Dew Feature Implementieren: Dritter Gang und freischalten
-        // -> TODO: Medipack Feauture Implementieren: Medipack geben und Kunden heilen.
+//      -> TODO: Kunden mit Items spawnen
+//      -> TODO: Mountain Dew Feature Implementieren: Dritter Gang und freischalten
+//      -> TODO: Medipack Feauture Implementieren: Medipack geben und Kunden heilen.
 //TODO: New Highscore reparieren
 //Extra Features
 // TODO: Reset High Score - Einstellung
@@ -41,7 +39,7 @@ final class Main implements Game {
     int height;
     int[] lieferungen;
     List<GameObj> hintergrund;
-    List<GameObj> gegner;
+    List<ImageObject> kunde;
     List<GameObj> wolken;
     List<GameObj> texte;
     List<GameObj> ziel;
@@ -53,7 +51,9 @@ final class Main implements Game {
     boolean lose = false;
     public boolean pause = false;
     double gang = 0;
+    double gang1 = 0;
     double schwenkung = 0;
+    double schwenkung1 = 0;
     int zeitspeicher = 0;
     boolean startbildschirm = true;
     int menüwahl = 0;
@@ -74,7 +74,7 @@ final class Main implements Game {
 
     Main(List<ImageObject> player, List<List<? extends GameObj>> goss
             , int width, int height, int[] lieferungen
-            , List<GameObj> hintergrund, List<GameObj> gegner
+            , List<GameObj> hintergrund, List<ImageObject> gegner
             , List<GameObj> wolken, List<GameObj> texte
             , List<GameObj> ziel, int timer, List<GameObj> ende
             , List<GameObj> eingang) {
@@ -84,7 +84,7 @@ final class Main implements Game {
         this.height = height;
         this.lieferungen = lieferungen;
         this.hintergrund = hintergrund;
-        this.gegner = gegner;
+        this.kunde = gegner;
         this.wolken = wolken;
         this.texte = texte;
         this.ziel = ziel;
@@ -108,14 +108,14 @@ final class Main implements Game {
         goss().clear();
         goss().add(hintergrund());
         goss().add(player());
-        goss().add(gegner());
+        goss().add(kunden());
         goss().add(wolken());
         goss().add(texte());
         goss().add(ziel());
         goss().add(ende);
         goss().add(eingang);
         hintergrund().clear();
-        gegner().clear();
+        kunden().clear();
         wolken().clear();
         texte().clear();
         player().clear();
@@ -157,7 +157,7 @@ final class Main implements Game {
         ziel().add(new ImageObject(
                 new Vertex(this.width() - 134, this.height() / 2D - 236 - 30), new Vertex(0, 0), "restaurant.png"));
 
-        gegner().add(new ImageObject(
+        kunden().add(new ImageObject(
                 new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
 
         ((TextObject) texte().get(0)).text = "Lieferungen: 0";
@@ -174,12 +174,12 @@ final class Main implements Game {
         }*/
 
 
-        for (var z : gegner()) {
+        for (var z : kunden()) {
 
             //Kunden sollen zurückgesetzt werden, wenn sie am Ende ankommen und dabei den Spieler nicht an seinem
             //Startpunkt treffen können
             if (z.isLeftOf(0) || z.touches(eingang().get(0))) {
-                z.pos().x = width() - ziel().get(0).width() - gegner().get(0).width();
+                z.pos().x = width() - ziel().get(0).width() - kunden().get(0).width();
                 z.pos().y = height() / 2D - 60;
             }
 
@@ -210,15 +210,22 @@ final class Main implements Game {
 
         //Es soll alle x Sekunden ein Gegner generiert werden.
         if (timer % (spawnrate / schwierigkeit) == 0 && timer > 0 && !pause) {
-            gegner().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
+            kunden().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
         }
 
         //Die Kunden haben eine Lebensmittelvergiftung und sollen durch die Gegend taumeln.
-        for (var z : gegner()) {
+        for (var z : kunden()) {
             if (timer % 20 == 0 && !z.touches(eingang().get(0)) && !pause) {
                 z.velocity().y = ((Math.random() > 0.5 ? 1 : -1)) * (int) ((Math.random() * 10) / 3);
             }
+
+            if (pause) {
+                z.setImage("pausenkunde.png");
+            } else {
+                z.setImage("kunde.gif");
+            }
         }
+
 
         // Timer
         ((TextObject) texte().get(1)).text = "Zeit: " + (int) (timer / SwingScreen.umwandlung);
@@ -265,7 +272,7 @@ final class Main implements Game {
         if (player().get(0).velocity().x == 3) player().get(0).setImage("fahrradkurier.gif");
         if (player().get(0).velocity().x == 6) player().get(0).setImage("fahrradkurier-schnell.gif");
 
-        if(!singleplayer){
+        if (!singleplayer) {
             if (player().get(1).velocity().x == 0) player().get(1).setImage("spieler1.png");
             if (player().get(1).velocity().x == 3) player().get(1).setImage("spieler1.gif");
             if (player().get(1).velocity().x == 6) player().get(1).setImage("spieler1-schnell.gif");
@@ -274,7 +281,7 @@ final class Main implements Game {
         //Aktionen beim Berühren vom Ziel: Zurückgesetzt werden
         if (player().get(0).touches(ziel().get(0))) {
             player().get(0).pos().x = 0;
-            player().get(0).pos().y = height() / 2D +30 - player().get(0).height() / 2D;
+            player().get(0).pos().y = height() / 2D + 30 - player().get(0).height() / 2D;
             player().get(0).velocity().x = 0;
             player().get(0).velocity().y = 0;
             lieferungen[0]++;
@@ -283,7 +290,7 @@ final class Main implements Game {
 
         if (!singleplayer && player().get(1).touches(ziel().get(0))) {
             player().get(1).pos().x = 0;
-            player().get(1).pos().y = height() / 2D -31 - player().get(1).height() / 2D;
+            player().get(1).pos().y = height() / 2D - 31 - player().get(1).height() / 2D;
             player().get(1).velocity().x = 0;
             player().get(1).velocity().y = 0;
             lieferungen[0]++;
@@ -413,28 +420,30 @@ final class Main implements Game {
                 g.setColor(Color.black);
                 g.fillRect(0, 0, width, height);
                 g.setColor(Color.white);
-                g.drawString("Game Over", width / 2 - 35, height / 2);
-                //Game over bei Niederlage
-                if (lose) g.drawString("You lose!", width / 2 - 25, height / 2 + 35);
-                else {
-                    //New Highscore Animation
-                    if (lieferungen[0] > highscore) {
-                        g.setColor(Color.ORANGE);
-                        g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
-                        g.setColor(Color.RED);
-                        g.setFont(h1);
-                        g.drawString("New Highscore!", width / 2 - 150, 270);
-                        if (blinken % 40 >= 20) {
+                if (singleplayer) {
+                    g.drawString("Game Over", width / 2 - 35, height / 2);
+                    //Game over bei Niederlage
+                    if (lose) g.drawString("You lose!", width / 2 - 25, height / 2 + 35);
+                    else {
+                        //New Highscore Animation
+                        if (lieferungen[0] > highscore) {
                             g.setColor(Color.ORANGE);
                             g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
+                            g.setColor(Color.RED);
+                            g.setFont(h1);
+                            g.drawString("New Highscore!", width / 2 - 150, 270);
+                            if (blinken % 40 >= 20) {
+                                g.setColor(Color.ORANGE);
+                                g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
+                            }
                         }
+                        g.setFont(mittel);
+                        g.setColor(Color.white);
+                        g.drawString("Score: " + lieferungen[0] + " | Highscore: " + loadHighscore(),
+                                //Der String soll so verschoben werden, dass er mittig Zentriert bleibt, wenn der Score steigt.
+                                width / 2 - 80 - (int) (5.5 * ((String.valueOf(lieferungen[0]).length() - 1) + String.valueOf(loadHighscore()).length())),
+                                height / 2 + 35);
                     }
-                    g.setFont(mittel);
-                    g.setColor(Color.white);
-                    g.drawString("Score: " + lieferungen[0] + " | Highscore: " + loadHighscore(),
-                            //Der String soll so verschoben werden, dass er mittig Zentriert bleibt, wenn der Score steigt.
-                            width / 2 - 80 - (int) (5.5 * ((String.valueOf(lieferungen[0]).length() - 1) + String.valueOf(loadHighscore()).length())),
-                            height / 2 + 35);
                 }
                 g.drawString("To restart, press Space.", width / 2 - 89, height / 2 + 70);
             }
@@ -537,7 +546,7 @@ final class Main implements Game {
             //Developer Keys
             case VK_O -> timer = 1;
             case VK_P -> saveScore();
-            case VK_L -> gegner().add(new ImageObject(
+            case VK_L -> kunden().add(new ImageObject(
                     new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
             //Steuerung
             case VK_D -> {
@@ -665,12 +674,14 @@ final class Main implements Game {
                 if (pause && !steuerung) {
                     switch (pausenmenü) {
                         case 0 -> {
-                            for (var z : gegner()) {
+                            for (var z : kunden()) {
                                 z.velocity().x = -1.5;
                             }
-                            for (var p : player) {
-                                p.velocity().x = gang;
-                                p.velocity().y = schwenkung;
+                            player().get(0).velocity().x = gang;
+                            player().get(0).velocity().y = schwenkung;
+                            if (!singleplayer) {
+                                player().get(1).velocity().x = gang1;
+                                player().get(1).velocity().y = schwenkung1;
                             }
                             timer = zeitspeicher;
                             pause = false;
@@ -693,25 +704,32 @@ final class Main implements Game {
             case VK_ESCAPE -> {
                 if (!pause && !lose && !startbildschirm) {
                     pausenmenü = 0;
+                    gang = player().get(0).velocity().x;
+                    schwenkung = player().get(0).velocity().y;
+                    if (!singleplayer) {
+                        gang1 = player().get(1).velocity().x;
+                        schwenkung1 = player().get(1).velocity().y;
+                    }
                     for (var p : player) {
-                        gang = p.velocity().x;
-                        schwenkung = p.velocity().y;
                         p.velocity().x = 0;
                         p.velocity().y = 0;
                     }
-                    for (var z : gegner()) {
+                    for (var z : kunden()) {
                         z.velocity().x = 0;
                         z.velocity().y = 0;
                     }
                     zeitspeicher = timer;
                     pause = true;
                 } else if (!lose && !startbildschirm && !steuerung) {
-                    for (var z : gegner()) {
+                    for (var z : kunden()) {
                         z.velocity().x = -1.5;
                     }
-                    for (var p : player) {
-                        p.velocity().x = gang;
-                        p.velocity().y = schwenkung;
+                    player().get(0).velocity().x = gang;
+                    player().get(0).velocity().y = schwenkung;
+                    if (!singleplayer) {
+                        player().get(1).velocity().x = gang1;
+                        player().get(1).velocity().y = schwenkung1;
+
                     }
                     timer = zeitspeicher;
                     zwischenspeicher1 = 0;
@@ -772,8 +790,8 @@ final class Main implements Game {
         return hintergrund;
     }
 
-    public List<GameObj> gegner() {
-        return gegner;
+    public List<ImageObject> kunden() {
+        return kunde;
     }
 
     public List<GameObj> wolken() {
@@ -803,7 +821,7 @@ final class Main implements Game {
                 this.height == that.height &&
                 Objects.equals(this.lieferungen, that.lieferungen) &&
                 Objects.equals(this.hintergrund, that.hintergrund) &&
-                Objects.equals(this.gegner, that.gegner) &&
+                Objects.equals(this.kunde, that.kunde) &&
                 Objects.equals(this.wolken, that.wolken) &&
                 Objects.equals(this.texte, that.texte) &&
                 Objects.equals(this.ziel, that.ziel) &&
@@ -812,7 +830,7 @@ final class Main implements Game {
 
     @Override
     public int hashCode() {
-        return Objects.hash(player, goss, width, height, lieferungen, hintergrund, gegner, wolken, texte, ziel, timer);
+        return Objects.hash(player, goss, width, height, lieferungen, hintergrund, kunde, wolken, texte, ziel, timer);
     }
 
     @Override
@@ -824,7 +842,7 @@ final class Main implements Game {
                 "height=" + height + ", " +
                 "schaden=" + lieferungen + ", " +
                 "hintergrund=" + hintergrund + ", " +
-                "gegner=" + gegner + ", " +
+                "gegner=" + kunde + ", " +
                 "wolken=" + wolken + ", " +
                 "texte=" + texte + ", " +
                 "ziel=" + ziel + ", " +
