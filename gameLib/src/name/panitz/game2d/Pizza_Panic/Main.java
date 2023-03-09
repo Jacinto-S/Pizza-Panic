@@ -124,6 +124,8 @@ final class Main implements Game {
         } else {
             texte().add(new TextObject(new Vertex(10, 30), "Timer: " + 0));
             texte().add(new TextObject(new Vertex(width() / 2D - 120, 30), "Spieler 1   " + 0 + "   |   " + 0 + "   Spieler 2"));
+            score1 = 0;
+            score2 = 0;
         }
         ziel().clear();
         eingang().clear();
@@ -151,9 +153,9 @@ final class Main implements Game {
                     new Vertex(0, this.height() / 2D - 30), new Vertex(0, 0), "startbereich.png"));
         } else {
             player().add(new ImageObject(
-                    new Vertex(0, height() / 2D + 10), new Vertex(0, 0), "fahrradkurier.png"));
+                    new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "fahrradkurier.png"));
             player().add(new ImageObject(
-                    new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "spieler1.png"));
+                    new Vertex(0, height() / 2D + 10), new Vertex(0, 0), "spieler1.png"));
             eingang().add(new ImageObject(
                     new Vertex(0, this.height() / 2D - 60), new Vertex(0, 0), "startbereich-groß.png"));
         }
@@ -287,14 +289,13 @@ final class Main implements Game {
         //Aktionen beim Berühren vom Ziel: Zurückgesetzt werden
         if (player().get(0).touches(ziel().get(0))) {
             player().get(0).pos().x = 0;
-            player().get(0).pos().y = height() / 2D + 30 - player().get(0).height() / 2D;
+            player().get(0).pos().y = height() / 2D - 31 - player().get(0).height() / 2D;
             player().get(0).velocity().x = 0;
             player().get(0).velocity().y = 0;
             if (singleplayer) {
                 lieferungen[0]++;
                 ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
-            }
-            else {
+            } else {
                 score1++;
                 ((TextObject) texte().get(1)).text = "Spieler 1   " + score1 + "   |   " + score2 + "   Spieler 2";
             }
@@ -303,7 +304,7 @@ final class Main implements Game {
 
         if (!singleplayer && player().get(1).touches(ziel().get(0))) {
             player().get(1).pos().x = 0;
-            player().get(1).pos().y = height() / 2D - 31 - player().get(1).height() / 2D;
+            player().get(1).pos().y = height() / 2D + 30 - player().get(1).height() / 2D;
             player().get(1).velocity().x = 0;
             player().get(1).velocity().y = 0;
             score2++;
@@ -457,7 +458,17 @@ final class Main implements Game {
                                 width / 2 - 80 - (int) (5.5 * ((String.valueOf(lieferungen[0]).length() - 1) + String.valueOf(loadHighscore()).length())),
                                 height / 2 + 35);
                     }
+                } else {
+                    g.setFont(h1);
+                    if (score1 > score2) g.drawString("Player 1 has won!", width / 2 - 190, 370);
+                    else if (score1 < score2) g.drawString("Player 2 has won!", width / 2 - 177, 370);
+                    else g.drawString("It's a draw!", width / 2 - 103, 370);
                 }
+                g.setFont(gross);
+                g.drawString("Spieler 1   " + score1, width / 2 - 171 - ((String.valueOf(score1).length()-1) * 13), height / 2 + 30);
+                g.drawString("|", width / 2, height / 2 + 30);
+                g.drawString(score2 + "   Spieler 2", width / 2 + 50, height / 2 + 30);
+                g.setFont(mittel);
                 g.drawString("To restart, press Space.", width / 2 - 89, height / 2 + 70);
             }
             //Pausebildschirm
