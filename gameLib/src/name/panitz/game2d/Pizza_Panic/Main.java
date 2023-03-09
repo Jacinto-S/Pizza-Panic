@@ -16,10 +16,10 @@ import static java.awt.event.KeyEvent.*;
 
 //Grundlegendes
 // TODO: Multiplayer (lokal)
-//      -> TODO: New Highscore aus für Mutliplayer
 //      -> TODO: Zwei Lieferungen Zähler
 //      -> TODO: Sieg für Spieler mit mehr Punkten
 //      -> TODO: Wenn einer stirbt, Sieg für den anderen Spieler
+// TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Items
 //      -> TODO: Kunden mit Items spawnen
 //      -> TODO: Mountain Dew Feature Implementieren: Dritter Gang und freischalten
@@ -28,7 +28,6 @@ import static java.awt.event.KeyEvent.*;
 //Extra Features
 // TODO: Reset High Score - Einstellung
 // TODO: High Scores für jeden Schwierigkeitsgrad einzeln
-// TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Animationen für die Kunden und das Kotzen
 // TODO: Krasses Erklärungsmenü im Hauptmenü
 
@@ -56,16 +55,16 @@ final class Main implements Game {
     double schwenkung1 = 0;
     int zeitspeicher = 0;
     boolean startbildschirm = true;
-    int menüwahl = 0;
+    int menuewahl = 0;
     double schwierigkeit = 0;
-    int pausenmenü = 0;
+    int pausenmenue = 0;
     boolean steuerung;
     boolean singleplayer = true;
     int zwischenspeicher1 = 0;
-    int menüstufen = 0;
-    int menüwahl1 = 0;
-    int menüwahl2 = 0;
-    boolean erklärung = false;
+    int menuestufen = 0;
+    int menuewahl1 = 0;
+    int menuewahl2 = 0;
+    boolean erklaerung = false;
     static int highscore = loadHighscore();
     static int blinken = 0;
     int score1;
@@ -119,8 +118,13 @@ final class Main implements Game {
         wolken().clear();
         texte().clear();
         player().clear();
-        texte().add(new TextObject(new Vertex(10, 30), "Lieferungen: " + 0));
-        texte().add(new TextObject(new Vertex(10, 60), "Timer: " + 0));
+        if (singleplayer) {
+            texte().add(new TextObject(new Vertex(10, 30), "Lieferungen: " + 0));
+            texte().add(new TextObject(new Vertex(10, 60), "Timer: " + 0));
+        } else {
+            texte().add(new TextObject(new Vertex(10, 30), "Timer: " + 0));
+            texte().add(new TextObject(new Vertex(width() / 2D - 120, 30), "Spieler 1   " + 0 + "   |   " + 0 + "   Spieler 2"));
+        }
         ziel().clear();
         eingang().clear();
         this.timer = (int) (121 * SwingScreen.umwandlung);
@@ -160,7 +164,8 @@ final class Main implements Game {
         kunden().add(new ImageObject(
                 new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
 
-        ((TextObject) texte().get(0)).text = "Lieferungen: 0";
+        if (singleplayer) ((TextObject) texte().get(0)).text = "Lieferungen: 0";
+        else ((TextObject) texte().get(1)).text = "Spieler 1   " + 0 + "   |   " + 0 + "   Spieler 2";
     }
 
 
@@ -228,7 +233,8 @@ final class Main implements Game {
 
 
         // Timer
-        ((TextObject) texte().get(1)).text = "Zeit: " + (int) (timer / SwingScreen.umwandlung);
+        if (singleplayer) ((TextObject) texte().get(1)).text = "Zeit: " + (int) (timer / SwingScreen.umwandlung);
+        else ((TextObject) texte().get(0)).text = "Zeit: " + (int) (timer / SwingScreen.umwandlung);
         if (timer > 0 && !pause) {
             timer--;
         }
@@ -284,8 +290,15 @@ final class Main implements Game {
             player().get(0).pos().y = height() / 2D + 30 - player().get(0).height() / 2D;
             player().get(0).velocity().x = 0;
             player().get(0).velocity().y = 0;
-            lieferungen[0]++;
-            ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
+            if (singleplayer) {
+                lieferungen[0]++;
+                ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
+            }
+            else {
+                score1++;
+                ((TextObject) texte().get(1)).text = "Spieler 1   " + score1 + "   |   " + score2 + "   Spieler 2";
+            }
+
         }
 
         if (!singleplayer && player().get(1).touches(ziel().get(0))) {
@@ -293,8 +306,8 @@ final class Main implements Game {
             player().get(1).pos().y = height() / 2D - 31 - player().get(1).height() / 2D;
             player().get(1).velocity().x = 0;
             player().get(1).velocity().y = 0;
-            lieferungen[0]++;
-            ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
+            score2++;
+            ((TextObject) texte().get(1)).text = "Spieler 1   " + score1 + "   |   " + score2 + "   Spieler 2";
         }
     }
 
@@ -326,7 +339,7 @@ final class Main implements Game {
     @Override
     public void paintTo(Graphics g) {
         Font h1 = g.getFont().deriveFont(48.0f);
-        Font groß = g.getFont().deriveFont(24.0f);
+        Font gross = g.getFont().deriveFont(24.0f);
         Font mittel = g.getFont().deriveFont(18.0f);
         Font klein = g.getFont().deriveFont(12.0f);
         //Main Menu
@@ -341,7 +354,7 @@ final class Main implements Game {
             g.drawString("PIZZA PANIC", width / 2 - 140, 115);
 
             //Menüoptionen Schwierigkeit
-            g.setFont(groß);
+            g.setFont(gross);
             //einfach
             g.setColor(Color.darkGray);
             g.fillRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
@@ -382,7 +395,7 @@ final class Main implements Game {
             //Auswahl der Stufen
             g.setColor(Color.red);
             //einfach
-            switch (menüwahl) {
+            switch (menuewahl) {
                 //einfach
                 case 0 -> g.drawRoundRect(width / 2 - 500, height / 2 - 150, 200, 60, 50, 50);
                 //medium
@@ -391,8 +404,8 @@ final class Main implements Game {
                 case 2 -> g.drawRoundRect(width / 2 + 500 - 200, height / 2 - 150, 200, 60, 50, 50);
             }
             //Spielermodus
-            if (menüstufen != 0) {
-                switch (menüwahl1) {
+            if (menuestufen != 0) {
+                switch (menuewahl1) {
                     //singleplayer
                     case 0 -> g.drawRoundRect(width / 2 - 300, height / 2 + 25, 200, 60, 50, 50);
                     //multiplayer
@@ -400,9 +413,9 @@ final class Main implements Game {
                 }
             }
             //Erklärungen
-            if (menüstufen == 2) {
+            if (menuestufen == 2) {
                 g.setColor(Color.ORANGE);
-                switch (menüwahl2) {
+                switch (menuewahl2) {
                     //Steuerung
                     case 0 -> g.drawRoundRect(width / 2 - 300, height / 2 + 200, 200, 60, 50, 50);
                     //Erkärung
@@ -474,16 +487,16 @@ final class Main implements Game {
                 //Menüauswahl
                 //Schwierigkeiten
                 g.setColor(Color.red);
-                if (pausenmenü == 0) {
+                if (pausenmenue == 0) {
                     g.drawRoundRect(width / 2 - 300, height / 2 - 50, 600, 100, 50, 50);
                 }
-                if (pausenmenü == 1) {
+                if (pausenmenue == 1) {
                     g.drawRoundRect(width / 2 - 300 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
-                if (pausenmenü == 2) {
+                if (pausenmenue == 2) {
                     g.drawRoundRect(width / 2 - 100 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
-                if (pausenmenü == 3) {
+                if (pausenmenue == 3) {
                     g.drawRoundRect(width / 2 + 100 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
             }
@@ -495,7 +508,7 @@ final class Main implements Game {
             g.setColor(Color.white);
             g.fillRoundRect(width / 2 - 300, height / 2 - 250, 600, 400, 50, 50);
             g.setColor(Color.red);
-            g.setFont(groß);
+            g.setFont(gross);
             g.drawString("Steuerung", width / 2 - 59, 195);
             g.setColor(Color.black);
             g.setFont(mittel);
@@ -512,13 +525,13 @@ final class Main implements Game {
             g.drawString("Bim fahren Oben/Unten: Lenken", width / 2 - 250 + 210, 240 + 25 * 9);
         }
         //Hier wird erklärt, worum es bei dem Spiel geht.
-        if (erklärung) {
+        if (erklaerung) {
             g.setColor(new Color(0f, 0f, 0f, 0.8f));
             g.fillRect(0, 0, width, height);
             g.setColor(Color.white);
             g.fillRoundRect(width / 2 - 600, height / 2 - 250, 1200, 400, 50, 50);
             g.setColor(Color.red);
-            g.setFont(groß);
+            g.setFont(gross);
             g.drawString("Pizza Panic", width / 2 - 59, 195);
             g.setColor(Color.black);
             g.setFont(mittel);
@@ -538,7 +551,7 @@ final class Main implements Game {
     @Override
     public void move() {
         if (timer == 0) return;
-        for (var gos : goss()) gos.forEach(go -> go.move());
+        for (var gos : goss()) gos.forEach(GameObj::move);
     }
 
     public void keyPressedReaction(KeyEvent keyEvent) {
@@ -569,49 +582,49 @@ final class Main implements Game {
                 if (player().get(0).velocity().x < 4 && !pause && !startbildschirm)
                     player().get(0).velocity().add(new Vertex(3, 0));
                 else if (startbildschirm) {
-                    switch (menüstufen) {
+                    switch (menuestufen) {
                         case 0 -> {
-                            if (menüwahl < 2) menüwahl++;
+                            if (menuewahl < 2) menuewahl++;
                         }
                         case 1 -> {
-                            if (menüwahl1 == 0) menüwahl1++;
+                            if (menuewahl1 == 0) menuewahl1++;
                         }
                         case 2 -> {
-                            if (menüwahl2 == 0) menüwahl2++;
+                            if (menuewahl2 == 0) menuewahl2++;
                         }
                     }
-                } else if (pause && pausenmenü != 0 && pausenmenü < 3) pausenmenü++;
+                } else if (pause && pausenmenue != 0 && pausenmenue < 3) pausenmenue++;
             }
             case VK_LEFT -> {
                 if (player().get(0).velocity().x > 0 && !pause && !startbildschirm)
                     player().get(0).velocity().add(new Vertex(-3, 0));
                 else if (startbildschirm) {
-                    switch (menüstufen) {
+                    switch (menuestufen) {
                         case 0 -> {
-                            if (menüwahl != 0) menüwahl--;
+                            if (menuewahl != 0) menuewahl--;
                         }
                         case 1 -> {
-                            if (menüwahl1 != 0) menüwahl1--;
+                            if (menuewahl1 != 0) menuewahl1--;
                         }
                         case 2 -> {
-                            if (menüwahl2 != 0) menüwahl2--;
+                            if (menuewahl2 != 0) menuewahl2--;
                         }
                     }
-                } else if (pause && pausenmenü > 0) pausenmenü--;
+                } else if (pause && pausenmenue > 0) pausenmenue--;
             }
             case VK_DOWN -> {
                 if (startbildschirm) {
-                    if (menüstufen == 0) {
-                        if (menüwahl == 0) menüwahl1 = 0;
-                        else if (menüwahl == 2) menüwahl1 = 1;
-                        menüstufen = 1;
-                    } else if (menüstufen == 1) {
-                        menüstufen = 2;
-                        menüwahl2 = menüwahl1;
+                    if (menuestufen == 0) {
+                        if (menuewahl == 0) menuewahl1 = 0;
+                        else if (menuewahl == 2) menuewahl1 = 1;
+                        menuestufen = 1;
+                    } else if (menuestufen == 1) {
+                        menuestufen = 2;
+                        menuewahl2 = menuewahl1;
                     }
                 }
-                if (pause && pausenmenü == 0) {
-                    pausenmenü = (zwischenspeicher1 == 0 ? 1 : zwischenspeicher1);
+                if (pause && pausenmenue == 0) {
+                    pausenmenue = (zwischenspeicher1 == 0 ? 1 : zwischenspeicher1);
                 }
                 if (player().get(0).velocity().y < 4 && player().get(0).velocity().x != 0
                         && (!(player().get(0).velocity().x == -1)) && !pause) {
@@ -619,10 +632,10 @@ final class Main implements Game {
                 }
             }
             case VK_UP -> {
-                if (startbildschirm && menüstufen > 0) menüstufen--;
-                if (pause && pausenmenü != 0) {
-                    zwischenspeicher1 = pausenmenü;
-                    pausenmenü = 0;
+                if (startbildschirm && menuestufen > 0) menuestufen--;
+                if (pause && pausenmenue != 0) {
+                    zwischenspeicher1 = pausenmenue;
+                    pausenmenue = 0;
                 }
                 if (player().get(0).velocity().y > -4 && player().get(0).velocity().x != 0
                         && (!(player().get(0).velocity().x == -1)) && !pause) {
@@ -642,10 +655,10 @@ final class Main implements Game {
             }
             case VK_ENTER -> {
                 if (startbildschirm && !steuerung) {
-                    if (menüstufen == 0) {
-                        menüstufen++;
-                    } else if (menüstufen == 1) {
-                        switch (menüwahl) {
+                    if (menuestufen == 0) {
+                        menuestufen++;
+                    } else if (menuestufen == 1) {
+                        switch (menuewahl) {
                             case 0 -> {
                                 schwierigkeit = 0.5;
                                 startbildschirm = false;
@@ -659,20 +672,20 @@ final class Main implements Game {
                                 startbildschirm = false;
                             }
                         }
-                        switch (menüwahl1) {
+                        switch (menuewahl1) {
                             case 0 -> singleplayer = true;
                             case 1 -> singleplayer = false;
                         }
                         init();
-                    } else if (menüstufen == 2) {
-                        switch (menüwahl2) {
+                    } else if (menuestufen == 2) {
+                        switch (menuewahl2) {
                             case 0 -> steuerung = true;
-                            case 1 -> erklärung = true;
+                            case 1 -> erklaerung = true;
                         }
                     }
                 }
                 if (pause && !steuerung) {
-                    switch (pausenmenü) {
+                    switch (pausenmenue) {
                         case 0 -> {
                             for (var z : kunden()) {
                                 z.velocity().x = -1.5;
@@ -686,9 +699,8 @@ final class Main implements Game {
                             timer = zeitspeicher;
                             pause = false;
                         }
-                        case 1 -> {
-                            steuerung = true;
-                        }
+                        case 1 -> steuerung = true;
+
                         case 2 -> {
                             pause = false;
                             init();
@@ -698,12 +710,12 @@ final class Main implements Game {
                             pause = false;
                         }
                     }
-                    pausenmenü = 0;
+                    pausenmenue = 0;
                 }
             }
             case VK_ESCAPE -> {
                 if (!pause && !lose && !startbildschirm) {
-                    pausenmenü = 0;
+                    pausenmenue = 0;
                     gang = player().get(0).velocity().x;
                     schwenkung = player().get(0).velocity().y;
                     if (!singleplayer) {
@@ -735,7 +747,7 @@ final class Main implements Game {
                     zwischenspeicher1 = 0;
                     pause = false;
                 } else if (steuerung) steuerung = false;
-                else if (erklärung) erklärung = false;
+                else if (erklaerung) erklaerung = false;
             }
         }
     }
