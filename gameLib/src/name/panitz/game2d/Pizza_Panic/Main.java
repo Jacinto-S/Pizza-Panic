@@ -14,9 +14,21 @@ import java.util.Objects;
 
 import static java.awt.event.KeyEvent.*;
 
-// TODO: Items
+//Grundlegendes
 // TODO: Multiplayer (lokal)
-// TODO: Rest High Score - Einstellung
+        // -> TODO: Verschiedenfarbige Spieler
+        // -> TODO: Verschiedenfarbige Spieler
+        // -> TODO: Zwei Lieferungen Zähler
+        // -> TODO: Sieg für Spieler mit mehr Punkten
+        // -> TODO: Wenn einer stirbt, Sieg für den anderen Spieler
+        // -> TODO: New Highscore aus für Mutliplayer
+// TODO: Items
+        // -> TODO: Kunden mit Items spawnen
+        // -> TODO: Mountain Dew Feature Implementieren: Dritter Gang und freischalten
+        // -> TODO: Medipack Feauture Implementieren: Medipack geben und Kunden heilen.
+//TODO: New Highscore reparieren
+//Extra Features
+// TODO: Reset High Score - Einstellung
 // TODO: High Scores für jeden Schwierigkeitsgrad einzeln
 // TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Animationen für die Kunden und das Kotzen
@@ -110,6 +122,7 @@ final class Main implements Game {
         texte().add(new TextObject(new Vertex(10, 30), "Lieferungen: " + 0));
         texte().add(new TextObject(new Vertex(10, 60), "Timer: " + 0));
         ziel().clear();
+        eingang().clear();
         this.timer = (int) (121 * SwingScreen.umwandlung);
         this.lieferungen[0] = 0;
         for (var p : player()) {
@@ -136,7 +149,7 @@ final class Main implements Game {
             player().add(new ImageObject(
                     new Vertex(0, height() / 2D + 10), new Vertex(0, 0), "fahrradkurier.png"));
             player().add(new ImageObject(
-                    new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "fahrradkurier.png"));
+                    new Vertex(0, height() / 2D - 51), new Vertex(0, 0), "spieler1.png"));
             eingang().add(new ImageObject(
                     new Vertex(0, this.height() / 2D - 60), new Vertex(0, 0), "startbereich-groß.png"));
         }
@@ -232,10 +245,6 @@ final class Main implements Game {
                 p.velocity().x = 0;
             if (p.isRightOf(this.width - p.width())) p.pos().x = this.width - p.width();
 
-            //Je nach Gang soll das Bild bzw. die Animation des Spielers anders aussehen:
-            if (p.velocity().x == 0) p.setImage("fahrradkurier.png");
-            if (p.velocity().x == 3) p.setImage("fahrradkurier.gif");
-            if (p.velocity().x == 6) p.setImage("fahrradkurier-schnell.gif");
 
             //Wenn man steht, sollte man nicht weiter nach oben oder unten fahren. Daher muss man dann angehalten werden.
             if (p.velocity().x == 0 && p.velocity().y != 0) p.velocity().y = 0;
@@ -250,11 +259,22 @@ final class Main implements Game {
             else if (blinken > 0) blinken = 0;
         }
 
+
+        //Je nach Gang soll das Bild bzw. die Animation des Spielers anders aussehen:
+        if (player().get(0).velocity().x == 0) player().get(0).setImage("fahrradkurier.png");
+        if (player().get(0).velocity().x == 3) player().get(0).setImage("fahrradkurier.gif");
+        if (player().get(0).velocity().x == 6) player().get(0).setImage("fahrradkurier-schnell.gif");
+
+        if(!singleplayer){
+            if (player().get(1).velocity().x == 0) player().get(1).setImage("spieler1.png");
+            if (player().get(1).velocity().x == 3) player().get(1).setImage("spieler1.gif");
+            if (player().get(1).velocity().x == 6) player().get(1).setImage("spieler1-schnell.gif");
+        }
+
         //Aktionen beim Berühren vom Ziel: Zurückgesetzt werden
         if (player().get(0).touches(ziel().get(0))) {
             player().get(0).pos().x = 0;
-            player().get(0).pos().y = this.height() / 2D +10 -51 - player().get(0).height() / 2D;
-            player().get(0).pos().y = this.height() / 2D +10 - player().get(0).height() / 2D;
+            player().get(0).pos().y = height() / 2D +30 - player().get(0).height() / 2D;
             player().get(0).velocity().x = 0;
             player().get(0).velocity().y = 0;
             lieferungen[0]++;
@@ -263,8 +283,7 @@ final class Main implements Game {
 
         if (!singleplayer && player().get(1).touches(ziel().get(0))) {
             player().get(1).pos().x = 0;
-            player().get(1).pos().y = this.height() / 2D +10 -51 - player().get(1).height() / 2D;
-            player().get(1).pos().y = this.height() / 2D -51 - player().get(1).height() / 2D;
+            player().get(1).pos().y = height() / 2D -31 - player().get(1).height() / 2D;
             player().get(1).velocity().x = 0;
             player().get(1).velocity().y = 0;
             lieferungen[0]++;
@@ -515,8 +534,12 @@ final class Main implements Game {
 
     public void keyPressedReaction(KeyEvent keyEvent) {
         switch (keyEvent.getKeyCode()) {
+            //Developer Keys
             case VK_O -> timer = 1;
             case VK_P -> saveScore();
+            case VK_L -> gegner().add(new ImageObject(
+                    new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
+            //Steuerung
             case VK_D -> {
                 if (!singleplayer && !lose && !pause && player().get(1).velocity().x < 4)
                     player().get(1).velocity().add(new Vertex(3, 0));
