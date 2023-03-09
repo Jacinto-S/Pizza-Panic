@@ -16,9 +16,7 @@ import static java.awt.event.KeyEvent.*;
 
 //Grundlegendes
 // TODO: Multiplayer (lokal)
-//      -> TODO: Zwei Lieferungen Zähler
-//      -> TODO: Sieg für Spieler mit mehr Punkten
-//      -> TODO: Wenn einer stirbt, Sieg für den anderen Spieler
+//      -> TODO: BUGFIX: Wenn einer stirbt, Sieg für den anderen Spieler
 // TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Items
 //      -> TODO: Kunden mit Items spawnen
@@ -69,6 +67,7 @@ final class Main implements Game {
     static int blinken = 0;
     int score1;
     int score2;
+    boolean loss1 = true;
 
 
     Main(List<ImageObject> player, List<List<? extends GameObj>> goss
@@ -192,12 +191,15 @@ final class Main implements Game {
 
 
             //Der Spieler soll verlieren, falls er einen Kunden berührt
-            for (var p : player) {
-                if (p.touches(z)) {
-                    z.pos().moveTo(new Vertex(width() + 10, z.pos().y));
-                    lose = true;
-                    timer = 0;
-                }
+            if (player().get(0).touches(z)) {
+                lose = true;
+                timer = 0;
+                if (!singleplayer) loss1 = true;
+            }
+            if(!singleplayer && player().get(1).touches(z)) {
+                lose = true;
+                timer = 0;
+                loss1 = false;
             }
 
 
@@ -460,12 +462,12 @@ final class Main implements Game {
                     }
                 } else {
                     g.setFont(h1);
-                    if (score1 > score2) g.drawString("Player 1 has won!", width / 2 - 190, 370);
-                    else if (score1 < score2) g.drawString("Player 2 has won!", width / 2 - 177, 370);
+                    if (lose && loss1 || !lose && score1 > score2) g.drawString("Player 1 has won!", width / 2 - 190, 370);
+                    else if (lose && !loss1 || !lose && score1 < score2) g.drawString("Player 2 has won!", width / 2 - 177, 370);
                     else g.drawString("It's a draw!", width / 2 - 103, 370);
                 }
                 g.setFont(gross);
-                g.drawString("Spieler 1   " + score1, width / 2 - 171 - ((String.valueOf(score1).length()-1) * 13), height / 2 + 30);
+                g.drawString("Spieler 1   " + score1, width / 2 - 171 - ((String.valueOf(score1).length() - 1) * 13), height / 2 + 30);
                 g.drawString("|", width / 2, height / 2 + 30);
                 g.drawString(score2 + "   Spieler 2", width / 2 + 50, height / 2 + 30);
                 g.setFont(mittel);
