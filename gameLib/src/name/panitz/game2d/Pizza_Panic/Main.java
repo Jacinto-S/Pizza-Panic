@@ -15,8 +15,6 @@ import java.util.Objects;
 import static java.awt.event.KeyEvent.*;
 
 //Grundlegendes
-// TODO: Multiplayer (lokal)
-//      -> TODO: BUGFIX: Wenn einer stirbt, Sieg für den anderen Spieler
 // TODO: Hauptmenü aus dem Game Over Bildschirm
 // TODO: Items
 //      -> TODO: Kunden mit Items spawnen
@@ -122,7 +120,7 @@ final class Main implements Game {
             texte().add(new TextObject(new Vertex(10, 60), "Timer: " + 0));
         } else {
             texte().add(new TextObject(new Vertex(10, 30), "Timer: " + 0));
-            texte().add(new TextObject(new Vertex(width() / 2D - 120, 30), "Spieler 1   " + 0 + "   |   " + 0 + "   Spieler 2"));
+            texte().add(new TextObject(new Vertex(width() / 2D - 120, 30), "Player 1   " + 0 + "   |   " + 0 + "   Player 2"));
             score1 = 0;
             score2 = 0;
         }
@@ -166,7 +164,7 @@ final class Main implements Game {
                 new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
 
         if (singleplayer) ((TextObject) texte().get(0)).text = "Lieferungen: 0";
-        else ((TextObject) texte().get(1)).text = "Spieler 1   " + 0 + "   |   " + 0 + "   Spieler 2";
+        else ((TextObject) texte().get(1)).text = "Player 1   " + 0 + "   |   " + 0 + "   Player 2";
     }
 
 
@@ -196,7 +194,7 @@ final class Main implements Game {
                 timer = 0;
                 if (!singleplayer) loss1 = true;
             }
-            if(!singleplayer && player().get(1).touches(z)) {
+            if (!singleplayer && player().get(1).touches(z)) {
                 lose = true;
                 timer = 0;
                 loss1 = false;
@@ -299,7 +297,7 @@ final class Main implements Game {
                 ((TextObject) texte().get(0)).text = "Lieferungen: " + lieferungen[0];
             } else {
                 score1++;
-                ((TextObject) texte().get(1)).text = "Spieler 1   " + score1 + "   |   " + score2 + "   Spieler 2";
+                ((TextObject) texte().get(1)).text = "Player 1   " + score1 + "   |   " + score2 + "   Player 2";
             }
 
         }
@@ -310,7 +308,7 @@ final class Main implements Game {
             player().get(1).velocity().x = 0;
             player().get(1).velocity().y = 0;
             score2++;
-            ((TextObject) texte().get(1)).text = "Spieler 1   " + score1 + "   |   " + score2 + "   Spieler 2";
+            ((TextObject) texte().get(1)).text = "Player 1   " + score1 + "   |   " + score2 + "   Player 2";
         }
     }
 
@@ -442,7 +440,7 @@ final class Main implements Game {
                     if (lose) g.drawString("You lose!", width / 2 - 25, height / 2 + 35);
                     else {
                         //New Highscore Animation
-                        if (lieferungen[0] > highscore) {
+                        if (lieferungen[0] > loadHighscore()) {
                             g.setColor(Color.ORANGE);
                             g.fillRoundRect(width / 2 - 300, 200, 600, 100, 50, 50);
                             g.setColor(Color.RED);
@@ -462,25 +460,28 @@ final class Main implements Game {
                     }
                 } else {
                     g.setFont(h1);
-                    if (lose && loss1 || !lose && score1 > score2) g.drawString("Player 1 has won!", width / 2 - 190, 370);
-                    else if (lose && !loss1 || !lose && score1 < score2) g.drawString("Player 2 has won!", width / 2 - 177, 370);
+                    if (lose && !loss1 || !lose && score1 > score2)
+                        g.drawString("Player 1 has won!", width / 2 - 190, 370);
+                    else if (lose || score1 < score2) g.drawString("Player 2 has won!", width / 2 - 177, 370);
                     else g.drawString("It's a draw!", width / 2 - 103, 370);
+                    g.setFont(gross);
+                    g.drawString("Player 1   " + score1, width / 2 - 171 - ((String.valueOf(score1).length() - 1) * 13), height / 2 + 30);
+                    g.drawString("|", width / 2, height / 2 + 30);
+                    g.drawString(score2 + "   Player 2", width / 2 + 50, height / 2 + 30);
+                    g.setFont(mittel);
                 }
-                g.setFont(gross);
-                g.drawString("Spieler 1   " + score1, width / 2 - 171 - ((String.valueOf(score1).length() - 1) * 13), height / 2 + 30);
-                g.drawString("|", width / 2, height / 2 + 30);
-                g.drawString(score2 + "   Spieler 2", width / 2 + 50, height / 2 + 30);
-                g.setFont(mittel);
                 g.drawString("To restart, press Space.", width / 2 - 89, height / 2 + 70);
             }
             //Pausebildschirm
             if (pause) {
-                g.setColor(new Color(0.41176470588f, 0.41176470588f, 0.41176470588f, 0.6f));
+                if (!(timer==0)) g.setColor(new Color(0.41176470588f, 0.41176470588f, 0.41176470588f, 0.6f));
+                else g.setColor(Color.black);
                 g.fillRect(0, 0, width, height);
                 g.setColor(new Color(0.2f, 0.2f, 0.2f, 1f));
                 g.fillRoundRect(width / 2 - 300, height / 2 - 50, 600, 100, 50, 50);
                 g.setColor(Color.white);
-                g.drawString("- PAUSED -", width / 2 - 50, height / 2 + 9);
+                if (timer > 0) g.drawString("- PAUSED -", width / 2 - 50, height / 2 + 9);
+                else g.drawString("- GAME OVER -", width / 2 - 70, height / 2 + 9);
                 //Menü
                 //Steuerung
                 g.setColor(new Color(0.2f, 0.2f, 0.2f, 1f));
@@ -500,16 +501,17 @@ final class Main implements Game {
                 //Menüauswahl
                 //Schwierigkeiten
                 g.setColor(Color.red);
+                if (timer == 0 && pausenmenue == 0) pausenmenue=1;
                 if (pausenmenue == 0) {
                     g.drawRoundRect(width / 2 - 300, height / 2 - 50, 600, 100, 50, 50);
                 }
-                if (pausenmenue == 1) {
+                else if (pausenmenue == 1) {
                     g.drawRoundRect(width / 2 - 300 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
-                if (pausenmenue == 2) {
+                else if (pausenmenue == 2) {
                     g.drawRoundRect(width / 2 - 100 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
-                if (pausenmenue == 3) {
+                else if (pausenmenue == 3) {
                     g.drawRoundRect(width / 2 + 100 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
             }
@@ -646,7 +648,7 @@ final class Main implements Game {
             }
             case VK_UP -> {
                 if (startbildschirm && menuestufen > 0) menuestufen--;
-                if (pause && pausenmenue != 0) {
+                if (pause && pausenmenue != 0 && !(timer==0)) {
                     zwischenspeicher1 = pausenmenue;
                     pausenmenue = 0;
                 }
