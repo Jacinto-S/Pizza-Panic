@@ -7,6 +7,7 @@ public final class ImageObject
         implements GameObj {
   private final Vertex pos;
   private final Vertex velocity;
+  public int kundenart;
   private double width;
   private double height;
   private String fileName;

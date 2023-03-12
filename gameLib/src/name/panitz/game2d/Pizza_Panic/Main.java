@@ -66,27 +66,32 @@ final class Main implements Game {
     int score1;
     int score2;
     boolean loss1 = true;
+    int kundenart = 0;
+    boolean flip = true;
+    double random = 0;
 
 
     Main(List<ImageObject> player, List<List<? extends GameObj>> goss
             , int width, int height, int[] lieferungen
-            , List<GameObj> hintergrund, List<ImageObject> gegner
+            , List<GameObj> hintergrund, List<ImageObject> kunde
             , List<GameObj> wolken, List<GameObj> texte
             , List<GameObj> ziel, int timer, List<GameObj> ende
-            , List<GameObj> eingang) {
+            , List<GameObj> eingang, int kundenart) {
+
         this.player = player;
         this.goss = goss;
         this.width = width;
         this.height = height;
         this.lieferungen = lieferungen;
         this.hintergrund = hintergrund;
-        this.kunde = gegner;
+        this.kunde = kunde;
         this.wolken = wolken;
         this.texte = texte;
         this.ziel = ziel;
         this.timer = timer;
         this.ende = ende;
         this.eingang = eingang;
+        this.kundenart = kundenart;
     }
 
 
@@ -96,7 +101,7 @@ final class Main implements Game {
                 , new ArrayList<>(), new ArrayList<>()
                 , new ArrayList<>(), new ArrayList<>()
                 , new ArrayList<>(), (int) (120 * SwingScreen.umwandlung)
-                , new ArrayList<>(), new ArrayList<>());
+                , new ArrayList<>(), new ArrayList<>(), 0);
     }
 
 
@@ -220,16 +225,41 @@ final class Main implements Game {
             kunden().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), "kunde.gif"));
         }
 
+        if (flip) {
+            random = Math.random();
+            flip = false;
+        }
+        if (timer % (spawnrate / (schwierigkeit * random>0.2?random:random+0.3)) == 0 && timer > 0 && !pause) {
+            int r = (int) (Math.random() * 10);
+            kunden().add(new ImageObject(new Vertex(width() - 134 - 35, height() / 2D - 60), new Vertex(-1.5, 0), r > 5 ? "medipackkunde.gif" : "mountaindewkunde.gif"));
+            kunden().get(kunden().size() - 1).kundenart = r > 5 ? 1 : 2;
+            flip = true;
+        }
+
         //Die Kunden haben eine Lebensmittelvergiftung und sollen durch die Gegend taumeln.
         for (var z : kunden()) {
             if (timer % 20 == 0 && !z.touches(eingang().get(0)) && !pause) {
                 z.velocity().y = ((Math.random() > 0.5 ? 1 : -1)) * (int) ((Math.random() * 10) / 3);
             }
 
-            if (pause) {
-                z.setImage("pausenkunde.png");
-            } else {
-                z.setImage("kunde.gif");
+            if (!(z.kundenart >= 1)) {
+                if (pause) {
+                    z.setImage("pausenkunde.png");
+                } else {
+                    z.setImage("kunde.gif");
+                }
+            } else if (z.kundenart == 1) {
+                if (pause) {
+                    z.setImage("medipackkunde.png");
+                } else {
+                    z.setImage("medipackkunde.gif");
+                }
+            } else if (z.kundenart == 2) {
+                if (pause) {
+                    z.setImage("mountaindewkunde.png");
+                } else {
+                    z.setImage("mountaindewkunde.gif");
+                }
             }
         }
 
@@ -474,7 +504,7 @@ final class Main implements Game {
             }
             //Pausebildschirm
             if (pause) {
-                if (!(timer==0)) g.setColor(new Color(0.41176470588f, 0.41176470588f, 0.41176470588f, 0.6f));
+                if (!(timer == 0)) g.setColor(new Color(0.41176470588f, 0.41176470588f, 0.41176470588f, 0.6f));
                 else g.setColor(Color.black);
                 g.fillRect(0, 0, width, height);
                 g.setColor(new Color(0.2f, 0.2f, 0.2f, 1f));
@@ -501,17 +531,14 @@ final class Main implements Game {
                 //Menüauswahl
                 //Schwierigkeiten
                 g.setColor(Color.red);
-                if (timer == 0 && pausenmenue == 0) pausenmenue=1;
+                if (timer == 0 && pausenmenue == 0) pausenmenue = 1;
                 if (pausenmenue == 0) {
                     g.drawRoundRect(width / 2 - 300, height / 2 - 50, 600, 100, 50, 50);
-                }
-                else if (pausenmenue == 1) {
+                } else if (pausenmenue == 1) {
                     g.drawRoundRect(width / 2 - 300 + 9, height / 2 + 60, 180, 30, 25, 25);
-                }
-                else if (pausenmenue == 2) {
+                } else if (pausenmenue == 2) {
                     g.drawRoundRect(width / 2 - 100 + 9, height / 2 + 60, 180, 30, 25, 25);
-                }
-                else if (pausenmenue == 3) {
+                } else if (pausenmenue == 3) {
                     g.drawRoundRect(width / 2 + 100 + 9, height / 2 + 60, 180, 30, 25, 25);
                 }
             }
@@ -648,7 +675,7 @@ final class Main implements Game {
             }
             case VK_UP -> {
                 if (startbildschirm && menuestufen > 0) menuestufen--;
-                if (pause && pausenmenue != 0 && !(timer==0)) {
+                if (pause && pausenmenue != 0 && !(timer == 0)) {
                     zwischenspeicher1 = pausenmenue;
                     pausenmenue = 0;
                 }
